@@ -22,12 +22,16 @@ public class InventoryWrapper151 extends InventoryWrapper {
 
     @Override
     public void setItem(int slot, Item item) {
+        if (item == null || item.getBaseItem() == null) {
+            return;
+        }
         inventory.a(slot, item.getBaseItem());
     }
 
     @Override
     public Item getItem(int slot) {
-        return new Item(inventory.a(slot));
+        OItemStack oStack = inventory.a(slot);
+        return oStack == null ? null : new Item(oStack);
     }
 
 }

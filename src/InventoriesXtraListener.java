@@ -32,7 +32,7 @@ public class InventoriesXtraListener extends PluginListener {
             }
             int index = InventoriesXtraActions.getInt(s, 1, -1);
             if (index == -1) {
-                InventoriesXtraActions.sendError(p, "Not a vlid index!");
+                InventoriesXtraActions.sendError(p, "Not a valid index!");
                 return true;
             }
             InventoryWrapper inventory = InventoriesXtraActions.getInventory(p, index);
@@ -49,12 +49,12 @@ public class InventoriesXtraListener extends PluginListener {
             }
             int index = InventoriesXtraActions.getInt(s, 1, -1);
             if (index == -1) {
-                InventoriesXtraActions.sendError(p, "Not a vlid index!");
+                InventoriesXtraActions.sendError(p, "Not a valid index!");
                 return true;
             }
             int size = InventoriesXtraActions.getInt(s, 2, -1);
             if (size == -1) {
-                InventoriesXtraActions.sendError(p, "Not a vlid soze!");
+                InventoriesXtraActions.sendError(p, "Not a valid size!");
                 return true;
             }
             String name = InventoriesXtraActions.getString(s, 3, null);
@@ -65,7 +65,7 @@ public class InventoriesXtraListener extends PluginListener {
                 inventory = InventoriesXtraActions.newInventory(p, size, name);
             }
             InventoriesXtraActions.addInventory(p, inventory, index);
-            InventoriesXtraActions.sendMessage(p, "Created a new inventory.\nAccess it with \"/gui" + index + "\"");
+            InventoriesXtraActions.sendMessage(p, "Created a new inventory.\nAccess it with \"/gui " + index + "\"");
             return true;
         }
 

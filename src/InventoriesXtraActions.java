@@ -1,5 +1,6 @@
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,13 @@ public class InventoriesXtraActions {
         if (inventories == null) {
             inventories = new HashMap<Integer, InventoryWrapper>();
         }
+        if (inventories.containsKey(index)) {
+            inventories.remove(index);
+        }
         inventories.put(index, inventory);
+        if (inventoriesMap.containsKey(p.getName())) {
+            inventoriesMap.remove(p.getName());
+        }
         inventoriesMap.put(p.getName(), inventories);
     }
 
@@ -65,7 +72,11 @@ public class InventoriesXtraActions {
     }
 
     public static InventoryWrapper getInventory(Player p, int index) {
-        return inventoriesMap.get(p.getName()).get(index);
+        Map<Integer, InventoryWrapper> inventories = inventoriesMap.get(p.getName());
+        if (inventories == null) {
+            return null;
+        }
+        return inventories.get(index);
     }
 
     public static int getInt(String[] args, int index, int other) {
@@ -86,6 +97,9 @@ public class InventoriesXtraActions {
     public static void loadInventories(Player p) {
         String path = InventoriesXtra.CONFIG + "inventories" + File.separator + p.getName() + File.separator;
         File pathFile = new File(path);
+        if (!pathFile.exists()) {
+            pathFile.mkdirs();
+        }
         String[] files = pathFile.list(new FilenameFilterTXT());
         if (files == null) {
             return;
@@ -110,9 +124,12 @@ public class InventoriesXtraActions {
         for (int i = 0; i < inventoriesMap.size(); i++) {
             InventoryWrapper inventory = inventories.get(i);
             PropertiesFile props = new PropertiesFile(path + i + ".txt");
+            props.setInt("size", inventory.getSize());
+            props.setString("name", inventory.getName());
             for (int j = 0; j < inventory.getSize(); j++) {
                 props.setString(String.valueOf(j), writeItem(inventory.getItem(j)));
             }
+            props.save();
         }
         inventoriesMap.remove(p.getName());
     }
@@ -145,26 +162,36 @@ public class InventoriesXtraActions {
                 return null;
             }
         }
-        Item item = new Item(itemID, damage, amount);
+        Item item = new Item(itemID, amount, 0, damage);
         if (data.length >= 4) {
             List<Enchantment> enchantments = readEnchantments(data[3]);
             for (Enchantment enchantment : enchantments) {
-                item.addEnchantment(enchantment);
+                if (enchantment != null) {
+                    item.addEnchantment(enchantment);
+                }
             }
         }
         if (data.length >= 5) {
             List<String> lore = readLore(data[4]);
             item.setLore(lore.toArray(new String[0]));
         }
-        return new Item();
+        return item;
     }
 
     public static List<Enchantment> readEnchantments(String string) {
         List<Enchantment> enchantments = new ArrayList<Enchantment>();
+        if (string.trim().equals("")) {
+            return enchantments;
+        }
         String[] data = string.split("@");
         for (String s : data) {
+            if (s.trim().equals("")) {
+                continue;
+            }
             Enchantment enchantment = readEnchantment(s);
-            enchantments.add(enchantment);
+            if (enchantment != null) {
+                enchantments.add(enchantment);
+            }
         }
         return enchantments;
     }
@@ -174,12 +201,12 @@ public class InventoriesXtraActions {
         int id = 0;
         int level = 0;
         try {
-            id = Integer.parseInt(data[2]);
+            id = Integer.parseInt(data[0]);
         } catch (Exception e) {
             return null;
         }
         try {
-            level = Integer.parseInt(data[2]);
+            level = Integer.parseInt(data[1]);
         } catch (Exception e) {
             return null;
         }
@@ -188,7 +215,7 @@ public class InventoriesXtraActions {
 
     public static List<String> readLore(String string) {
         List<String> strings = new ArrayList<String>();
-        String[] data = string.split(":");
+        String[] data = string.split("@");
         for (String s : data) {
             strings.add(s);
         }
@@ -196,6 +223,9 @@ public class InventoriesXtraActions {
     }
 
     public static String writeItem(Item item) {
+        if (item == null) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         sb.append(item.getItemId());
         sb.append(",");
@@ -210,8 +240,12 @@ public class InventoriesXtraActions {
     }
 
     public static String writeEnchantments(Item item) {
+        Enchantment[] enchantments = item.getEnchantments();
+        if (enchantments == null) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
-        for (Enchantment enchantment : item.getEnchantments()) {
+        for (Enchantment enchantment : enchantments) {
             sb.append(writeEnchantment(enchantment));
             sb.append("@");
         }
@@ -221,13 +255,16 @@ public class InventoriesXtraActions {
     public static String writeEnchantment(Enchantment enchantment) {
         StringBuilder sb = new StringBuilder();
         sb.append(enchantment.getType().getType());
-        sb.append(",");
+        sb.append(":");
         sb.append(enchantment.getLevel());
         return sb.toString();
     }
     
     public static String writeLore(Item item) {
         String[] lores = item.getLore();
+        if (lores == null) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         for (String lore : lores) {
             sb.append(lore);
